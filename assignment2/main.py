@@ -101,7 +101,7 @@ class ScatterPlot:
         i=0
         while (i < len(types)):
             shape = ['circle', 'square', 'plus']
-            leg = tk.Label(window, text=str(shape[i])+" : "+str(COLORS[i])).place(relx=0.95, rely=0.1+0.05*i, anchor="ne")
+            leg = tk.Label(window, text=str(shape[i])+" : "+str(types[i])).place(relx=0.95, rely=0.1+0.05*i, anchor="ne")
 
             i = i+1
 
