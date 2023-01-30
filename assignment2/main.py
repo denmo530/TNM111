@@ -59,6 +59,7 @@ class ScatterPlot:
         self.canvas.create_text(700, 700, text="X-axis")
         self.canvas.create_text(25, 25, text="Y-axis")
 
+
         # Get min and max values
         xMin = min(self.data,key=lambda point:point.x)
         yMin = min(self.data,key=lambda point:point.y)
@@ -89,38 +90,18 @@ class ScatterPlot:
         types = set(map(self.get_type, self.data))
         types = list(types)
 
-        self.draw_points(x_range, y_range, types)
-    
+        self.draw_points(x_range, y_range, types)    
+        
         ####################
-        # CREATE LEGEND
+        # DRAW LEGEND
         ####################
-        legend_text = f"""
-            -------------------
-            |    {[types[0]]}    |
-            |   ------     line2    |
-            |   ------     line3    |
-            -------------------"""
+        i=0
+        while (i < len(types)):
+            shape = ['circle', 'square', 'plus']
+            leg = tk.Label(window, text=str(shape[i])+" : "+str(COLORS[i])).place(relx=0.95, rely=0.1+0.05*i, anchor="ne")
 
+            i = i+1
 
-        # root = tk.Tk()
-        # root.geometry('250x150')
-    
-        # This will create a LabelFrame
-        label_frame = tk.LabelFrame(window, text='This is Label Frame')
-        
-        label1 = tk.Label(label_frame, text='1. This is a Label.')
-        label1.pack()
-        self.canvas.create_window(50, 100, window=label_frame, anchor="w")
-        
-        label1.place(x=50, y=5)
-        
-        label2 = tk.Label(label_frame, text='2. This is another Label.')
-        label2.place(x=0, y=35)
-        
-        label3 = tk.Label(label_frame,
-                    text='3. We can add multiple\n    widgets in it.')
-        
-        label3.place(x=0, y=65)   
 
         window.mainloop()
 
@@ -176,7 +157,7 @@ def load_csv(file):
     return data
 
 if __name__ == "__main__":
-    data = load_csv("data2.csv")
+    data = load_csv("data1.csv")
     # scatter_plot(data)
     sp = ScatterPlot(data)
     sp.scatter_plot()
