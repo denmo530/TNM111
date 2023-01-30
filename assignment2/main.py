@@ -10,42 +10,48 @@ class Point:
     self.y= y
     self.type = type
 
+    def __str__(self):
+        return f'{self.x}i{self.y:+}j'
+
 class ScatterPlot:
     
     def __init__(self, data):
         self.data = data
-        # self.scatter_plot(data)
-        
+        self.translated = False
+
 
         
     def get_type(self, point):
         return point.type
 
-    def draw_points(self, data, x_range, y_range, types):
-        points = []
-        for point in data:
+    def draw_points(self, x_range, y_range, types):
+        
+        i = 0
+        for point in self.data:
+            i += 1
             point.x = 400 + point.x * (350/x_range)
             point.y = 400 - point.y * (350/y_range)
             # point.y = round(400 - i*(350/x_range))  
             index = types.index(point.type)
             if index == 0:    
-                points.append(self.canvas.create_oval(point.x-5, point.y-5, point.x+5, point.y+5, fill=COLORS[index]))
+                element = self.canvas.create_oval(point.x-5, point.y-5, point.x+5, point.y+5, fill=COLORS[index], tags=["point", f"shape{i}"])
             elif index == 1:
-                points.append(self.canvas.create_rectangle(point.x-5, point.y-5, point.x+5, point.y+5,
-                    fill=COLORS[index]))
+                element = self.canvas.create_rectangle(point.x-5, point.y-5, point.x+5, point.y+5, fill=COLORS[index], tags=["point", f"shape{i}"])                
             else:
-                points.append(self.canvas.create_text(point.x, point.y, text="+", fill=COLORS[index], font=("Purisa", 30)))
+                element = self.canvas.create_text(point.x, point.y, text="+", fill=COLORS[index], font=("Purisa", 30), tags=["point", f"shape{i}"])
+                     
+            self.canvas.tag_bind(element, '<Button-1>', self.object_left_click_event) # Left click
+            self.canvas.tag_bind(element, '<Button-3>', self.object_right_click_event) # Right click 
 
-        return points
         
 
-    def scatter_plot(self, data):
+    def scatter_plot(self):
+
         window = tk.Tk()
         window.title("Scatter Plot")
         self.canvas = tk.Canvas(window, width=800, height=800)
         self.canvas.pack()  
         
-
         # Draw axis x and y
         # create_line(x1, y1, x2, y2)
         self.canvas.create_line(50, 400, 750, 400, fill="black", width=5)
@@ -54,10 +60,10 @@ class ScatterPlot:
         self.canvas.create_text(25, 25, text="Y-axis")
 
         # Get min and max values
-        xMin = min(data,key=lambda point:point.x)
-        yMin = min(data,key=lambda point:point.y)
-        xMax = max(data,key=lambda point:point.x)
-        yMax = max(data,key=lambda point:point.y)
+        xMin = min(self.data,key=lambda point:point.x)
+        yMin = min(self.data,key=lambda point:point.y)
+        xMax = max(self.data,key=lambda point:point.x)
+        yMax = max(self.data,key=lambda point:point.y)
 
         # Ranges for x and y
         x_range = round(max(abs(xMin.x), abs(xMax.x)))
@@ -80,19 +86,10 @@ class ScatterPlot:
         ####################
         # DRAW POINTS
         ####################
-        types = set(map(self.get_type, data))
+        types = set(map(self.get_type, self.data))
         types = list(types)
 
-        points = self.draw_points(data, x_range, y_range, types)
-
-        i = 0
-        for point in points:         
-            # print(point)
-            i += 1
-            # self.canvas.tag_bind(point, "<Enter>", point_click())
-            self.canvas.tag_bind(point, '<Button-1>', self.object_click_event) # Left click
-            self.canvas.tag_bind(point, '<Button-2>', self.object_right_click_event) # Right click
-
+        self.draw_points(x_range, y_range, types)
     
         ####################
         # CREATE LEGEND
@@ -128,21 +125,43 @@ class ScatterPlot:
         window.mainloop()
 
 
-    def object_click_event(self, event):
-        print(event.widget)
-        self.canvas.itemconfigure(event.num, fill="blue")
-        # print('Clicked object at: ', self.canvas.coords(event.num), event.num)    
-
-
-    def object_right_click_event(self, event):
-        print("rigth click")
+    def object_left_click_event(self, event):
         # self.canvas.itemconfigure(event.num, fill="blue")
         # print('Clicked object at: ', self.canvas.coords(event.num), event.num)    
+        # Move all with tag "shape"
+        
+        move_x = 400-event.x
+        move_y = 400-event.y
+        
+        point_ids = self.canvas.find_withtag("point")
 
-    def canvas_click_event(self, event):
-        print('Clicked canvas: ', event.x, event.y, event.widget)
-   
+        # Loop through all points with tag "point"
+        for i in point_ids:
+            self.canvas.move(i, move_x, move_y)
 
+    def object_right_click_event(self, event):
+        # Get tags of current element
+        current = event.widget.find_withtag("current")[0]
+        tag = self.canvas.gettags(current)[1]
+
+        # Extract index from element
+        index = ""
+        for s in tag:
+            if s.isnumeric():
+                index += s
+        
+        
+        active = self.data[int(index)]
+
+        dist = []
+        for i in range(len(data)):
+            dist.append(math.sqrt(pow((active.x-data[i].x),2)+pow((active.y-data[i].y),2)))
+
+        for i in range(0,5):
+            print(i)
+
+ 
+       
 # load csv
 def load_csv(file):
     data = []
@@ -157,7 +176,7 @@ def load_csv(file):
     return data
 
 if __name__ == "__main__":
-    data = load_csv("data1.csv")
+    data = load_csv("data2.csv")
     # scatter_plot(data)
     sp = ScatterPlot(data)
-    sp.scatter_plot(data)
+    sp.scatter_plot()
