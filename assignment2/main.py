@@ -44,7 +44,7 @@ class ScatterPlot:
                 element = self.canvas.create_text(point.x, point.y, text="+", fill=COLORS[index], font=("Purisa", 30), tags=["point", f"shape{i}", f"{COLORS[index]}"])
                      
             self.canvas.tag_bind(element, '<Button-1>', self.object_left_click_event) # Left click
-            self.canvas.tag_bind(element, '<Button-3>', self.object_right_click_event) # Right click 
+            self.canvas.tag_bind(element, '<Button-3>', self.object_right_click_event) # Right click
 
         
 
@@ -76,8 +76,7 @@ class ScatterPlot:
         ####################
         # DRAW TICKS
         ####################
-        for i in range(-x_range, x_range+1, round(x_range*2/11)):
-            # x = 50 + (350 / x_range) * i
+        for i in range(-x_range, x_range+1, round(x_range*2/11)):            
             x = round(400 + i*(350/x_range))
             self.canvas.create_line(x, 390, x, 410, width=1)  
             self.canvas.create_text(round(x), 425, text=str(i))
@@ -98,13 +97,10 @@ class ScatterPlot:
         ####################
         # DRAW LEGEND
         ####################
-        i=0
-        while (i < len(types)):
+               
+        for i in range(len(types)):        
             shape = ['circle', 'square', 'plus']
             leg = tk.Label(window, text=str(shape[i])+" : "+str(types[i])).place(relx=0.95, rely=0.1+0.05*i, anchor="ne")
-
-            i = i+1
-
 
         window.mainloop()
 
@@ -134,13 +130,13 @@ class ScatterPlot:
             # Loop through all points with tag "point"
             for i in range(len(points)):
                 self.canvas.move(points[i], move_x, move_y)
-                tag = self.canvas.gettags(points[i])[1]
+                # tag = self.canvas.gettags(points[i])[1]
                 
-                # Extract index from element
-                index = ""
-                for s in tag:
-                    if s.isnumeric():
-                        index += s
+                # # Extract index from element
+                # index = ""
+                # for s in tag:
+                #     if s.isnumeric():
+                #         index += s
                 
                 p = self.canvas.coords(points[i])
              
@@ -173,15 +169,14 @@ class ScatterPlot:
         
             active = self.canvas.coords(current)            
 
-            dist = []   
-            p = []
+            dist = []
             for point in points:
                 co = self.canvas.coords(point)
                 d = math.sqrt(pow((active[0]-co[0]),2)+pow((active[1]-co[1]),2))  
                             
                 if d > 0:                 
                     dist.append(d)
-                    # p.append(point)
+                   
             closest_points_indices = np.argpartition(dist, 5)[:5] 
                 
             # Get 5 smallest distances               

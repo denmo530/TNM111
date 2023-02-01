@@ -1,0 +1,54 @@
+/**
+ *
+    Author: Kahin Akram
+    Date: Jan 24, 2020
+    TNM048 Lab 1 - Visual Information-Seeking Mantra
+    Css file
+ *
+*/
+
+.zoom {
+  cursor: move;
+  fill: none;
+  pointer-events: all;
+}
+.no-mouse {
+    pointer-events: none;
+}
+#mapid {
+  height: 300px;
+  width: auto;
+  position: relative;
+  margin-top: -30px;
+  margin-left: 40px;
+  margin-right: 20px;
+  margin-bottom: 10px;
+}
+#tooltip, #color-info{
+        height: 270px;
+        background-color: white;
+        -webkit-border-radius: 10px;
+        -moz-border-radius: 10px;
+        border-radius: 10px;
+        -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        pointer-events: none;
+        opacity: 0.8;
+}
+#tooltip p {
+    margin: 0;
+    font-family: sans-serif;
+    font-size: 14px;
+    line-height: 30px;
+}
+#tooltip, #color-info{
+    margin-top: 20px;
+    position: relative;
+    width: auto;
+}
+#color-info {
+    font-family: sans-serif;
+    font-size: 14px;
+    line-height: 30px;
+}

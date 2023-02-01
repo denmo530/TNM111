@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<!--
+    Author: Kahin Akram
+    Date: Jan 24, 2020
+    TNM048 Lab 1 - Visual Information-Seeking Mantra
+    Main html file
+-->
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>TNM048 Lab 1, 2019</title>
+        <link rel="stylesheet" href="libs/css/index.css" />
+        <link rel="stylesheet" href="libs/bootstrap/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.4.0/leaflet.css" />
+    </head>
+
+    <body class="container-fluid">
+        <div class="card text-center">
+            <div class="card-header">
+                <h2>Visual Information-Seeking Mantra</h2>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-sm-12 col-md-10 col-lg-10 col-xl-10">
+                        <div id="context"></div>
+                        <div id="scatterplot"></div>
+                        <div id="mapid"></div>
+                    </div>
+                    <div class="col-sm-12 col-md-2 col-lg-2 col-xl-2">
+                        <div class="row">
+                            <div class="col-12" id="tooltip">
+                                <br>
+                                <h5><strong>Information</strong></h5>
+                                <hr>
+                                <p><span id="date">Date</span></p>
+                                <p><span id="magnitude">Magnitude</span></p>
+                                <p><span id="deaths">Deaths</span></p>
+                                <p><span id="country">Country</span></p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12" id="color-info">
+                                <br>
+                                <h5><strong>Color Coding</strong></h5>
+                                <hr>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+
+    <script type=text/javascript src="libs/jquery/jquery.min.js"></script>
+    <script type=text/javascript src=libs/bootstrap/js/bootstrap.min.js></script>
+    <script type="text/javascript" src="libs/d3/d3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.4.0/leaflet-src.js"></script>
+    <!-- our scripts -->
+    <script src="js/color_info.js"></script>
+    <script src="js/plot_points.js"></script>
+    <script src="js/fpc.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/main.js"></script>
+
+</html>
