@@ -169,9 +169,13 @@ function focusPlusContext(data) {
   /**
    * Task 10 - Call x and y axis
    */
-  focus.append("g");
+  focus
+    .append("g")
+    .attr("class", "axis axis--x")
+    .attr("transform", "translate(0, " + height + "")
+    .call(xAxis);
   //here..
-  focus.append("g");
+  focus.append("g").attr("class", "axis axis--y").call(yAxis);
   //here..
 
   //Add y axis label to the scatter plot
@@ -192,7 +196,10 @@ function focusPlusContext(data) {
    */
   selected_dots = dots
     .selectAll("dot")
-    //here..
+    .data(data.features)
+    .enter()
+    .append("circle")
+    .attr("class", "dot")
     .filter(function (d) {
       return d.properties.EQ_PRIMARY != null;
     })
@@ -207,6 +214,7 @@ function focusPlusContext(data) {
    * Task 12 - Call plot function
    * plot(points,nr,nr) no need to send any integers!
    */
+  points.plot(selected_dots, 10, 2);
 
   //<---------------------------------------------------------------------------------------------------->
 
@@ -319,7 +327,7 @@ function focusPlusContext(data) {
       /**
        * Remove comment for updating dots on the map.
        */
-      //curr_points_view = world_map.change_map_points(curr_view_erth)
+      curr_points_view = world_map.change_map_points(curr_view_erth);
     }
   }
 
