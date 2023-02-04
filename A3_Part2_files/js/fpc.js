@@ -154,6 +154,7 @@ function focusPlusContext(data) {
    * Task 8 - Call plot function.
    * plot(points,nr,nr) try to use different numbers for the scaling.
    */
+  let points = new Points();
   points.plot(small_points, 100, 2);
 
   //<---------------------------------------------------------------------------------------------------->
@@ -172,7 +173,7 @@ function focusPlusContext(data) {
   focus
     .append("g")
     .attr("class", "axis axis--x")
-    .attr("transform", "translate(0, " + height + "")
+    .attr("transform", "translate(0, " + height + ")")
     .call(xAxis);
   //here..
   focus.append("g").attr("class", "axis axis--y").call(yAxis);
@@ -200,6 +201,7 @@ function focusPlusContext(data) {
     .enter()
     .append("circle")
     .attr("class", "dot")
+    .attr("style", "opacity: 0.9;")
     .filter(function (d) {
       return d.properties.EQ_PRIMARY != null;
     })
@@ -214,7 +216,7 @@ function focusPlusContext(data) {
    * Task 12 - Call plot function
    * plot(points,nr,nr) no need to send any integers!
    */
-  points.plot(selected_dots, 10, 2);
+  points.plot(selected_dots, 1, 2);
 
   //<---------------------------------------------------------------------------------------------------->
 
@@ -229,6 +231,7 @@ function focusPlusContext(data) {
       /**
        * Task 13 - Update information in the "tooltip" by calling the tooltip function.
        */
+      points.tooltip(d);
 
       //Rescale the dots onhover
       d3.select(this).attr("r", 15);
