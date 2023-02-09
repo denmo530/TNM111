@@ -3,6 +3,8 @@ let margin = { top: 10, right: 30, bottom: 30, left: 40 };
 let width = 1000 - margin.left - margin.right;
 let height = 1000 - margin.top - margin.bottom;
 
+let dropdownList = document.getElementById("dropdown-list");
+
 let svg = d3
   .select("#graph")
   .append("svg")
@@ -23,7 +25,8 @@ d3.json(
       .data(data.links)
       .enter()
       .append("line")
-      .attr("stroke-width", 1);
+      .attr("stroke-width", 1)
+      .classed("link", true);
 
     let node = svg
       .append("g")
@@ -32,17 +35,25 @@ d3.json(
       .data(data.nodes)
       .enter()
       .append("circle")
-      .attr("r", 30)
-      .attr("fill", (d) => d.colour);
-    //   .call(
-    //     d3
-    //       .drag()
-    //       .on("start", dragstarted)
-    //       .on("drag", dragged)
-    //       .on("end", dragended)
-    //   );
+      .attr("r", 12)
+      .attr("fill", (d) => d.colour)
+      .classed("fixed", (d) => d.fx !== undefined)
+      .call(
+        d3
+          .drag()
+          .on("start", dragStarted)
+          .on("drag", dragged)
+          .on("end", dragEnded)
+      );
 
     node.append("title").text((d) => d.name);
+    node
+      .append("svg:text")
+      .attr("x", 10)
+      .attr("dy", "1em")
+      .text(function (d) {
+        return d.name;
+      });
 
     let simulation = d3
       .forceSimulation()
@@ -50,8 +61,9 @@ d3.json(
         "link",
         d3.forceLink().id((d) => d.index)
       )
-      .force("charge", d3.forceManyBody().strength(-100))
-      .force("center", d3.forceCenter(width / 2, height / 2));
+      .force("center", d3.forceCenter(width / 2, height / 4))
+      .force("collission", d3.forceCollide().radius(30))
+      .force("charge", d3.forceManyBody().strength(-20));
 
     simulation.nodes(data.nodes).on("tick", () => {
       link
@@ -64,5 +76,67 @@ d3.json(
     });
 
     simulation.force("link").links(data.links);
+
+    let mainCharacters = getMainCharacters(data);
+
+    mainCharacters.forEach((character) => {
+      let label = document.createElement("label");
+      let input = document.createElement("input");
+
+      label.text = character.name;
+      input.type = "checkbox";
+      input.name = character.name;
+      input.value = character.name;
+      input.onclick = function (event) {
+        characterClick(event.target.name);
+      };
+
+      label.innerHTML = character.name;
+      label.htmlFor = character.name;
+
+      label.appendChild(input);
+      dropdownList.appendChild(label);
+    });
+
+    function dragStarted(d) {
+      if (!d3.event.active) simulation.alphaTarget(0.03).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+      // console.log("start");
+      // d3.select(this).classed("fixed", true);
+    }
+
+    function dragged(d) {
+      console.log("Dragged");
+      // Check
+      d.fx = d3.event.x;
+      d.fy = d3.event.y;
+    }
+
+    function dragEnded(d) {
+      // # d3.select(this).classed("fixed", false);
+      // if (!d3.event.active) simulation.alphaTarget(0.03);
+      // d.fx = null;
+      // d.fy = null;
+      console.log(d);
+    }
+
+    function getMainCharacters() {
+      const mainChars = data.nodes.filter((char) => char.colour !== "#808080");
+      //   let positions = mainChars.map((char) => {
+      //   });
+      return mainChars;
+    }
+
+    function characterClick(event) {
+      let mainCharacters = getMainCharacters();
+      console.log(mainCharacters);
+      let checkedBoxes = document.querySelectorAll(
+        "input[type=checkbox]:checked"
+      );
+      console.log(checkedBoxes);
+
+      checkedBoxes.forEach((box) => console.log(box.name));
+    }
   }
 );
