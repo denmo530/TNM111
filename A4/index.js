@@ -28,6 +28,11 @@ d3.json(
       .attr("stroke-width", 1)
       .classed("link", true);
 
+    let linkLabel = svg
+      .append("text")
+      .attr("class", "link-label")
+      .style("visibility", "hidden");
+
     let node = svg
       .append("g")
       .attr("class", "nodes")
@@ -39,21 +44,43 @@ d3.json(
       .attr("fill", (d) => d.colour)
       .classed("fixed", (d) => d.fx !== undefined)
       .call(
-        d3
-          .drag()
-          .on("start", dragStarted)
-          .on("drag", dragged)
-          .on("end", dragEnded)
+        d3.drag().on("start", dragStarted).on("drag", dragged)
+        // .on("end", dragEnded)
       );
 
-    node.append("title").text((d) => d.name);
-    node
-      .append("svg:text")
-      .attr("x", 10)
-      .attr("dy", "1em")
-      .text(function (d) {
-        return d.name;
-      });
+    /**
+     * LABELS
+     */
+    node.append("title").text((d) => `${d.name}\nValue: ${d.value}`);
+
+    link.on("mouseover", function (d) {
+      link.attr("opacity", 0.2);
+      d3.select(this).attr("opacity", 1);
+      linkLabel.text("Link from " + d.source.name + " to " + d.target.name);
+      linkLabel.style("visibility", "visible");
+    });
+
+    link.on("mousemove", function (d) {
+      var mousePos = d3.mouse(svg.node());
+      linkLabel.attr("x", mousePos[0] + 10).attr("y", mousePos[1] + 10);
+    });
+
+    link.on("mouseout", function (d) {
+      link.attr("opacity", 1);
+      linkLabel.style("visibility", "hidden");
+    });
+
+    // node
+    //   .append("svg:text")
+    //   .attr("x", 10)
+    //   .attr("dy", "1em")
+    //   .text(function (d) {
+    //     return d.name;
+    //   });
+
+    /**
+     * HOVER STYLE
+     */
 
     // Add mouseover on the nodes
     node.on("mouseover", function (d) {
@@ -81,6 +108,10 @@ d3.json(
       node.transition().attr("opacity", 1);
       link.attr("opacity", 1);
     });
+
+    /**
+     * SIMULATION
+     */
 
     let simulation = d3
       .forceSimulation()
@@ -125,29 +156,24 @@ d3.json(
       dropdownList.appendChild(label);
     });
 
+    /**
+     * NODE DRAG FUNCTIONS
+     */
     function dragStarted(d) {
       if (!d3.event.active) simulation.alphaTarget(0.03).restart();
       d.fx = d.x;
       d.fy = d.y;
-      // console.log("start");
-      // d3.select(this).classed("fixed", true);
     }
 
     function dragged(d) {
-      console.log("Dragged");
       // Check
       d.fx = d3.event.x;
       d.fy = d3.event.y;
     }
 
-    function dragEnded(d) {
-      // # d3.select(this).classed("fixed", false);
-      // if (!d3.event.active) simulation.alphaTarget(0.03);
-      // d.fx = null;
-      // d.fy = null;
-      console.log(d);
-    }
-
+    /**
+     * MAIN CHARACTER FUNCTIONS
+     */
     function getMainCharacters() {
       const mainChars = data.nodes.filter((char) => char.colour !== "#808080");
       //   let positions = mainChars.map((char) => {
