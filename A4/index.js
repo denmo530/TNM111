@@ -55,6 +55,33 @@ d3.json(
         return d.name;
       });
 
+    // Add mouseover on the nodes
+    node.on("mouseover", function (d) {
+      // Lower opacity on all nodes
+      node.transition().attr("opacity", 0.3);
+      link.attr("opacity", 0.1);
+
+      // Style for active node
+      d3.select(this).transition().attr("opacity", 1);
+
+      link.data().forEach((item) => {
+        if (item.source.index === d.index || item.target.index === d.index) {
+          link
+            .filter((l) => l.index == item.index)
+            .transition()
+            .attr("opacity", 1)
+            .attr("stroke-width", 2);
+        }
+      });
+    });
+
+    node.on("mouseout", function (d) {
+      // Reset style
+      d3.select(this).attr("fill", (n) => n.colour);
+      node.transition().attr("opacity", 1);
+      link.attr("opacity", 1);
+    });
+
     let simulation = d3
       .forceSimulation()
       .force(
@@ -136,7 +163,16 @@ d3.json(
       );
       console.log(checkedBoxes);
 
-      checkedBoxes.forEach((box) => console.log(box.name));
+      let checkedNames = Array.prototype.slice
+        .call(checkedBoxes)
+        .map((box) => box.name);
+      console.log(checkedNames);
+
+      d3.select("#node-" + nodeId)
+        .classed("highlighted", true)
+        .style("stroke-width", "2px");
+
+      console.log(filteredData);
     }
   }
 );
