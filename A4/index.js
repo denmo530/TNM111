@@ -34,15 +34,16 @@ d3.json(
       .style("visibility", "hidden");
 
     let node = svg
-      .append("g")
       .attr("class", "nodes")
       .selectAll("circle")
       .data(data.nodes)
       .enter()
+      .append("g")
       .append("circle")
-      .attr("r", 12)
+      .attr("r", 30)
       .attr("fill", (d) => d.colour)
       .classed("fixed", (d) => d.fx !== undefined)
+      .classed("nodes", true)
       .call(
         d3.drag().on("start", dragStarted).on("drag", dragged)
         // .on("end", dragEnded)
@@ -51,7 +52,29 @@ d3.json(
     /**
      * LABELS
      */
+    let label = svg
+      .append("g")
+      .attr("class", "labels")
+      .selectAll("text")
+      .data(data.nodes)
+      .enter()
+      .append("text")
+      .text(function (d) {
+        return d.name;
+      })
+      .attr("class", "label");
+    label
+      .style("text-anchor", "middle")
+      .style("font-size", 12)
+      .attr("fill", "white");
+
     node.append("title").text((d) => `${d.name}\nValue: ${d.value}`);
+    node.attr("id", (d) => "node-" + d.name);
+    node
+      .append("text")
+      .attr("x", (d) => d.cx)
+      .attr("y", (d) => d.cy)
+      .text((d) => d.name);
 
     link.on("mouseover", function (d) {
       link.attr("opacity", 0.2);
@@ -87,6 +110,7 @@ d3.json(
       // Lower opacity on all nodes
       node.transition().attr("opacity", 0.3);
       link.attr("opacity", 0.1);
+      label.transition().attr("opacity", 0.3);
 
       // Style for active node
       d3.select(this).transition().attr("opacity", 1);
@@ -107,6 +131,7 @@ d3.json(
       d3.select(this).attr("fill", (n) => n.colour);
       node.transition().attr("opacity", 1);
       link.attr("opacity", 1);
+      label.attr("opacity", 1);
     });
 
     /**
@@ -119,8 +144,8 @@ d3.json(
         "link",
         d3.forceLink().id((d) => d.index)
       )
-      .force("center", d3.forceCenter(width / 2, height / 4))
-      .force("collission", d3.forceCollide().radius(30))
+      .force("center", d3.forceCenter(width / 2, height / 3))
+      .force("collission", d3.forceCollide().radius(50))
       .force("charge", d3.forceManyBody().strength(-20));
 
     simulation.nodes(data.nodes).on("tick", () => {
@@ -131,6 +156,7 @@ d3.json(
         .attr("y2", (d) => d.target.y);
 
       node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
+      label.attr("x", (d) => d.x).attr("y", (d) => d.y);
     });
 
     simulation.force("link").links(data.links);
@@ -183,7 +209,6 @@ d3.json(
 
     function characterClick(event) {
       let mainCharacters = getMainCharacters();
-      console.log(mainCharacters);
       let checkedBoxes = document.querySelectorAll(
         "input[type=checkbox]:checked"
       );
@@ -194,11 +219,25 @@ d3.json(
         .map((box) => box.name);
       console.log(checkedNames);
 
-      d3.select("#node-" + nodeId)
-        .classed("highlighted", true)
-        .style("stroke-width", "2px");
+      node.transition().attr("opacity", 0.3);
+      link.attr("opacity", 0.1);
 
-      console.log(filteredData);
+      checkedNames.map((char) => {
+        d3.select("#node-" + char)
+          .transition()
+          .attr("opacity", 1);
+        let d = d3.select("#node-" + char).datum();
+
+        link.data().forEach((item) => {
+          if (item.source.index === d.index || item.target.index === d.index) {
+            link
+              .filter((l) => l.index == item.index)
+              .transition()
+              .attr("opacity", 1)
+              .attr("stroke-width", 2);
+          }
+        });
+      });
     }
   }
 );
