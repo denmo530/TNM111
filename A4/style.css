@@ -7,12 +7,14 @@
 
 .node {
   stroke: #fff;
-  stroke-width: 1.5px;
+  stroke-width: 2px;
+  cursor: pointer;
 }
 .link {
   stroke: black;
-  stroke-width: 0.5px;
+  stroke-width: 1px;
   stroke-opacity: 1;
+  cursor: pointer;
 }
 
 .control-panel {
@@ -23,18 +25,22 @@
   right: 0;
 }
 
+#tooltip-container {
+  background-color: #00ff00;
+}
+
 .dropdown {
-  position: relative;
+  /* position: relative; */
   font-size: 14px;
   color: #333;
 }
 
-#dropdown-list {
+.dropdown-list {
   display: flex;
   flex-direction: column;
   padding: 12px;
   background: #fff;
-  position: absolute;
+  /* position: absolute; */
   top: 30px;
   left: 2px;
   right: 2px;
