@@ -1,20 +1,155 @@
-function drawGraph(data) {
+/**
+ * MAIN CHARACTER FUNCTIONS
+ */
+function getMainCharacters(data) {
+  const mainChars = data.nodes.filter((char) => char.colour !== "#808080");
+
+  return mainChars;
+}
+
+/**
+ * Function to handle click on character
+ * @param {*} event
+ */
+function characterClick(event, link, node) {
+  let checkedBoxes = document.querySelectorAll("input[type=checkbox]:checked");
+
+  let checkedNames = Array.prototype.slice
+    .call(checkedBoxes)
+    .map((box) => box.name);
+
+  if (checkedNames.length > 0) {
+    node.transition().attr("opacity", 0.3);
+    link.attr("opacity", 0.1);
+
+    checkedNames.map((char) => {
+      d3.selectAll(".node-" + char.replace(/ /g, ""))
+        .transition()
+        .attr("opacity", 1.0);
+
+      let d = d3.select(".node-" + char.replace(/ /g, "")).data()[0];
+
+      link.data().forEach((item) => {
+        if (item.source.index === d.index || item.target.index === d.index) {
+          link
+            .filter((l) => l.index == item.index)
+            .transition()
+            .attr("opacity", 1)
+            .attr("stroke-width", 2);
+        }
+      });
+    });
+  } else {
+    // No names selected
+    node.transition().attr("opacity", 1);
+    link.transition().attr("opacity", 1).attr("stroke-width", 2);
+  }
+}
+/**
+ * Function to filter and combine data from multiple episodes
+ * @returns
+ */
+function filterEpisodeData(originData) {
+  let checkedBoxes = document.querySelectorAll(
+    "#dropdown-list2 input[type=checkbox]:checked"
+  );
+  let filteredData = [];
+
+  // Add data from episode that corresponds to checkboxes
+  if (checkedBoxes.length > 0) {
+    checkedBoxes.forEach((box) => filteredData.push(allData[box.value - 1]));
+  } else {
+    return originData;
+  }
+
+  // Extract nodes and links from data
+  let nodes = filteredData.map((item) => item.nodes);
+  let links = filteredData.map((item) => item.links);
+
+  let uniqueNodes = [];
+  let uniqueLinks = [];
+
+  // Loop through all episodes in nodes
+  for (let index = 0; index < nodes.length; index++) {
+    let episodeNodes = nodes[index];
+    let episodeLinks = links[index];
+
+    // Loop through all nodes in current episodes
+    episodeNodes.forEach((currNode, i) => {
+      // Check if name already exists in uniqueNodes
+      if (uniqueNodes.some((node) => node.name === currNode.name)) {
+        let uniqueNodesIndex = uniqueNodes.findIndex(
+          (node) => node.name === currNode.name
+        );
+
+        // Increase value of existing node
+        uniqueNodes[uniqueNodesIndex].value += currNode.value;
+
+        // Update source and target on all connected links to current node
+        episodeLinks.map((link) => {
+          if (link.target === i) {
+            return { ...link, target: uniqueNodesIndex };
+          } else if (link.source === i) {
+            return { ...link, source: uniqueNodesIndex };
+          }
+          return link;
+        });
+      } else {
+        uniqueNodes.push(currNode);
+      }
+    });
+
+    episodeLinks.forEach((link) => {
+      const containsLink = uniqueLinks.some(
+        (obj) => obj.target === link.target && obj.source === link.source
+      );
+      if (containsLink) {
+        // Add values on same links
+        let index = uniqueLinks.findIndex(
+          (obj) => obj.target === link.target && obj.source === link.source
+        );
+        uniqueLinks[index].value += link.value;
+      } else {
+        // Link does not exists
+        uniqueLinks.push(link);
+      }
+    });
+  }
+
+  let combinedData = { nodes: uniqueNodes, links: uniqueLinks };
+  console.log(combinedData);
+  return combinedData;
+}
+
+/**
+ * Main function to draw graph
+ * @param {*} data
+ * @param {*} type
+ * @returns
+ */
+function drawGraph(data, type, graphIndex) {
+  let originData = data;
+  let checkedBoxes = document.querySelectorAll(
+    "#dropdown-list2 input[type=checkbox]:checked"
+  );
+
+  if (type === "episodes" && checkedBoxes.length > 0) {
+    data = filterEpisodeData(originData);
+  }
+
   // Set size of window for graph and margins
   let margin = { top: 10, right: 30, bottom: 30, left: 40 };
   let width = 1000 - margin.left - margin.right;
-  let height = 1000 - margin.top - margin.bottom;
-
-  let dropdownList = document.getElementById("dropdown-list1");
+  let height = 1300 - margin.top - margin.bottom;
 
   let svg = d3
     .select("#graph")
     .append("svg")
+    .attr("id", `graph-${graphIndex}`)
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
     .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-  console.log(data);
 
   let link = svg
     .append("g")
@@ -46,8 +181,9 @@ function drawGraph(data) {
     .enter()
     .append("g")
     .append("circle")
-    .attr("r", 30)
+    .attr("r", 15)
     .attr("fill", (d) => d.colour)
+    .attr("class", (d) => "node-" + d.name.replace(/ /g, ""))
     .classed("fixed", (d) => d.fx !== undefined)
     .classed("nodes", true)
     .call(
@@ -56,35 +192,13 @@ function drawGraph(data) {
     );
 
   /**
-   * LABELS
+   * HOVER FUNCTIONS
    */
-  let label = svg
-    .append("g")
-    .attr("class", "labels")
-    .selectAll("text")
-    .data(data.nodes)
-    .enter()
-    .append("text")
-    .text(function (d) {
-      return d.name;
-    })
-    .attr("class", "label");
-  label
-    .style("text-anchor", "middle")
-    .style("font-size", 12)
-    .attr("fill", "white");
-
-  node.append("title").text((d) => `${d.name}\nValue: ${d.value}`);
-  node.attr("id", (d) => "node-" + d.name);
-  node
-    .append("text")
-    .attr("x", (d) => d.cx)
-    .attr("y", (d) => d.cy)
-    .text((d) => d.name);
 
   link.on("mouseover", function (d) {
     link.attr("opacity", 0.2);
     d3.select(this).attr("opacity", 1);
+
     // linkLabel.text("Link from " + d.source.name + " to " + d.target.name);
     let text = `Link from ${d.source.name} to ${d.target.name} <br> Number of interactions: ${d.value}`;
     linkLabel.html(text);
@@ -108,6 +222,7 @@ function drawGraph(data) {
   let toolTip = d3
     .select("body")
     .append("div")
+    .attr("id", "toolTip")
     .style("position", "absolute")
     .style("color", "white")
     .style("padding", "8px")
@@ -118,67 +233,6 @@ function drawGraph(data) {
     .style("height", "auto")
     .style("visibility", "hidden")
     .text("");
-
-  // Mouse events for tooltips
-  label.on("mouseover", function (d) {
-    let text = `Name: ${d.name} <br> Number of scenes: ${d.value}`;
-    toolTip.html(text);
-
-    toolTip.style("visibility", "visible");
-  });
-  label.on("mousemove", function () {
-    toolTip
-      .style("top", d3.event.pageY - 10 + "px")
-      .style("left", d3.event.pageX - 10 + "px");
-  });
-
-  console.log(toolTip);
-
-  /**
-   * HOVER STYLE
-   */
-
-  // Add mouseover on the nodes
-  node.on("mouseover", function (d) {
-    // toolTip.html(`${d.name}`);
-    // toolTip.style("visibility", "visible");
-
-    // Lower opacity on all nodes
-    node.transition().attr("opacity", 0.3);
-    link.attr("opacity", 0.1);
-    // Label opacity lowered
-    label.transition().attr("opacity", 0.3);
-
-    // Style for active node
-    d3.select(this).transition().attr("opacity", 1);
-
-    // Set opacity to 1 on connected links
-    link.data().forEach((item) => {
-      if (item.source.index === d.index || item.target.index === d.index) {
-        link
-          .filter((l) => l.index == item.index)
-          .transition()
-          .attr("opacity", 1)
-          .attr("stroke-width", 2);
-      }
-    });
-  });
-
-  node.on("mousemove", function (d) {
-    toolTip
-      .style("top", d3.event.pageY - 10 + "px")
-      .style("left", d3.event.pageX - 10 + "px");
-  });
-
-  node.on("mouseout", function (d) {
-    // Reset style
-    d3.select(this).attr("fill", (n) => n.colour);
-    node.transition().attr("opacity", 1);
-    link.attr("opacity", 1);
-    label.attr("opacity", 1);
-
-    toolTip.style("visibility", "hidden");
-  });
 
   /**
    * SIMULATION
@@ -191,7 +245,7 @@ function drawGraph(data) {
       d3.forceLink().id((d) => d.index)
     )
     .force("center", d3.forceCenter(width / 2, height / 3))
-    .force("collission", d3.forceCollide().radius(50))
+    .force("collission", d3.forceCollide().radius(35))
     .force("charge", d3.forceManyBody().strength(-20));
 
   simulation.nodes(data.nodes).on("tick", () => {
@@ -202,31 +256,10 @@ function drawGraph(data) {
       .attr("y2", (d) => d.target.y);
 
     node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
-    label.attr("x", (d) => d.x).attr("y", (d) => d.y);
+    // label.attr("x", (d) => d.x).attr("y", (d) => d.y);
   });
 
   simulation.force("link").links(data.links);
-
-  let mainCharacters = getMainCharacters(data);
-
-  mainCharacters.forEach((character) => {
-    let label = document.createElement("label");
-    let input = document.createElement("input");
-
-    label.text = character.name;
-    input.type = "checkbox";
-    input.name = character.name;
-    input.value = character.name;
-    input.onclick = function (event) {
-      characterClick(event.target.name);
-    };
-
-    label.innerHTML = character.name;
-    label.htmlFor = character.name;
-
-    label.appendChild(input);
-    dropdownList.appendChild(label);
-  });
 
   /**
    * NODE DRAG FUNCTIONS
@@ -243,49 +276,5 @@ function drawGraph(data) {
     d.fy = d3.event.y;
   }
 
-  /**
-   * MAIN CHARACTER FUNCTIONS
-   */
-  function getMainCharacters() {
-    const mainChars = data.nodes.filter((char) => char.colour !== "#808080");
-    //   let positions = mainChars.map((char) => {
-    //   });
-    return mainChars;
-  }
-
-  function characterClick(event) {
-    let checkedBoxes = document.querySelectorAll(
-      "input[type=checkbox]:checked"
-    );
-
-    let checkedNames = Array.prototype.slice
-      .call(checkedBoxes)
-      .map((box) => box.name);
-
-    if (checkedNames.length > 0) {
-      node.transition().attr("opacity", 0.3);
-      link.attr("opacity", 0.1);
-
-      checkedNames.map((char) => {
-        d3.select("#node-" + char)
-          .transition()
-          .attr("opacity", 1);
-        let d = d3.select("#node-" + char).datum();
-
-        link.data().forEach((item) => {
-          if (item.source.index === d.index || item.target.index === d.index) {
-            link
-              .filter((l) => l.index == item.index)
-              .transition()
-              .attr("opacity", 1)
-              .attr("stroke-width", 2);
-          }
-        });
-      });
-    } else {
-      // No names selected
-      node.transition().attr("opacity", 1);
-      link.transition().attr("opacity", 1).attr("stroke-width", 2);
-    }
-  }
+  return { node, link, toolTip, svg };
 }

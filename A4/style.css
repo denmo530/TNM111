@@ -5,6 +5,11 @@
   flex-direction: column;
 }
 
+#graph {
+  display: flex;
+  /* padding-left: 600px; */
+}
+
 .node {
   stroke: #fff;
   stroke-width: 2px;
@@ -18,9 +23,9 @@
 }
 
 .control-panel {
-  position: absolute;
-  margin: 2rem;
-  background-color: #00ff00;
+  position: fixed;
+  margin: 1rem;
+  /* background-color: #00ff00; */
   top: 0;
   right: 0;
 }
