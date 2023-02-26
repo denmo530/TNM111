@@ -35,8 +35,8 @@ function characterClick(links, nodes) {
 
         links.data().forEach((item) => {
           if (
-            item.source.name.replace(/ /g, "") === d.name ||
-            item.target.name.replace(/ /g, "") === d.name
+            item.source.name.replace(/ /g, "") === nodeName ||
+            item.target.name.replace(/ /g, "") === nodeName
           ) {
             links
               .filter((l) => l.index == item.index)

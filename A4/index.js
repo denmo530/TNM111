@@ -119,10 +119,10 @@ d3.json(
 
     function highlightNode() {
       // Uncheck checked boxes
-      let checkedBoxes = document.querySelectorAll(
-        "input[type=checkbox]:checked"
-      );
-      checkedBoxes.forEach((box) => (box.checked = false));
+      // let checkedBoxes = document.querySelectorAll(
+      //   "input[type=checkbox]:checked"
+      // );
+      // checkedBoxes.forEach((box) => (box.checked = false));
 
       let text = `Name: ${
         d3.select(this).data()[0].name
