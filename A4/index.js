@@ -1,25 +1,36 @@
 function combineEpisodes() {
-  const allData = [];
+  let allData = [];
 
   for (let i = 1; i < 8; i++) {
     d3.json(
       `./starwars-interactions/starwars-episode-${i}-interactions-allCharacters.json`,
       (data) => {
+        // Update source and target id to name
+        data.links.map((link) => {
+          link.source = data.nodes[link.source].name;
+          link.target = data.nodes[link.target].name;
+        });
+
         allData.push(data);
       }
     );
   }
+
+  // let combinedData = { nodes, links };
 
   return allData;
 }
 
 let allData = combineEpisodes();
 
-console.log(allData);
-
 d3.json(
   "./starwars-interactions/starwars-full-interactions-allCharacters.json",
   (data) => {
+    data.links.map((link) => {
+      link.source = data.nodes[link.source].name;
+      link.target = data.nodes[link.target].name;
+    });
+
     let graph1 = drawGraph(data, "all", 1);
     let graph2 = drawGraph(data, "episodes", 2);
 
@@ -63,15 +74,21 @@ d3.json(
         input.value = episode;
 
         input.onclick = function (event) {
-          let data = filterEpisodeData(event.target.value);
+          let checkedBoxes = document.querySelectorAll(
+            "#dropdown-list2 input[type=checkbox]:checked"
+          );
 
-          // graph2.node.remove();
-          // graph2.link.remove();
-          // graph2.select("#graph").remove();
+          if (checkedBoxes.length > 0) {
+            newData = filterEpisodeData(event.target.value);
+          } else {
+            newData = data;
+          }
+
+          // let data = filterEpisodeData(event.target.value);
           d3.select("#graph-2").remove();
 
-          graph2 = drawGraph(data, "episode", 2);
-          graph2.link.data(data.links);
+          graph2 = drawGraph(newData, "episode", 2);
+          graph2.link.data(newData.links);
 
           graph2.node
             .enter()
@@ -100,23 +117,13 @@ d3.json(
       });
     }
 
-    // /**
-    //  * DRAG FUNCTIONS
-    //  * @param {*} d
-    //  */
-    // function dragStarted(d) {
-    //   if (!d3.event.active) simulation.alphaTarget(0.03).restart();
-    //   d.fx = d.x;
-    //   d.fy = d.y;
-    // }
-
-    // function dragged(d) {
-    //   // Check
-    //   d.fx = d3.event.x;
-    //   d.fy = d3.event.y;
-    // }
-
     function highlightNode() {
+      // Uncheck checked boxes
+      let checkedBoxes = document.querySelectorAll(
+        "input[type=checkbox]:checked"
+      );
+      checkedBoxes.forEach((box) => (box.checked = false));
+
       let text = `Name: ${
         d3.select(this).data()[0].name
       } <br> Number of scenes: ${d3.select(this).data()[0].value}`;
@@ -126,8 +133,7 @@ d3.json(
 
       graph1.toolTip.style("top", 0).style("left", 0);
 
-      let id = d3.select(this).attr("class");
-
+      // Lower opacity on all nodes and links
       graph1.node.transition().attr("opacity", 0.3);
       graph2.node.transition().attr("opacity", 0.3);
 
@@ -135,18 +141,17 @@ d3.json(
       graph2.link.transition().attr("opacity", 0.1);
 
       // Set opacity to 1 on hovered nodes
-
+      let id = d3.select(this).attr("class");
       id = id.split(" ")[0];
-      console.log(id);
+
       d3.selectAll(`.${id}`).transition().attr("opacity", 1);
 
-      graph1.link.data().forEach((item) => {
-        console.log(item);
-        console.log(d3.selectAll(`.${id}`));
+      let nodeName = id.split(" ")[0].replace("node-", "").replace(/ /g, "");
 
+      graph1.link.data().forEach((item) => {
         if (
-          item.source.index === d3.select(`.${id}`).data()[0].index ||
-          item.target.index === d3.select(`.${id}`).data()[0].index
+          item.source.name.replace(/ /g, "") === nodeName ||
+          item.target.name.replace(/ /g, "") === nodeName
         ) {
           graph1.link
             .filter((l) => l.index == item.index)
@@ -158,8 +163,8 @@ d3.json(
 
       graph2.link.data().forEach((item) => {
         if (
-          item.source.index === d3.select(`.${id}`).data()[0].index ||
-          item.target.index === d3.select(`.${id}`).data()[0].index
+          item.source.name.replace(/ /g, "") === nodeName ||
+          item.target.name.replace(/ /g, "") === nodeName
         ) {
           graph2.link
             .filter((l) => l.index == item.index)
@@ -174,7 +179,7 @@ d3.json(
      * Function to render character menu
      * @param {*} data
      */
-    function characterMenu(data, link, node) {
+    function characterMenu(data) {
       let mainCharacters = getMainCharacters(data);
       let dropdownList = document.getElementById("dropdown-list1");
       mainCharacters = new Set(mainCharacters);
@@ -188,8 +193,8 @@ d3.json(
         input.name = character.name;
         input.value = character.name;
         input.onclick = function (event) {
-          characterClick(event.target.name, graph1.link, graph1.node);
-          characterClick(event.target.name, graph2.link, graph2.node);
+          characterClick(graph1.link, graph1.node);
+          characterClick(graph2.link, graph2.node);
         };
 
         label.innerHTML = character.name;

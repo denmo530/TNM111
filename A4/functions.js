@@ -11,7 +11,7 @@ function getMainCharacters(data) {
  * Function to handle click on character
  * @param {*} event
  */
-function characterClick(event, link, node) {
+function characterClick(links, nodes) {
   let checkedBoxes = document.querySelectorAll("input[type=checkbox]:checked");
 
   let checkedNames = Array.prototype.slice
@@ -19,8 +19,8 @@ function characterClick(event, link, node) {
     .map((box) => box.name);
 
   if (checkedNames.length > 0) {
-    node.transition().attr("opacity", 0.3);
-    link.attr("opacity", 0.1);
+    nodes.transition().attr("opacity", 0.3);
+    links.attr("opacity", 0.1);
 
     checkedNames.map((char) => {
       d3.selectAll(".node-" + char.replace(/ /g, ""))
@@ -29,20 +29,28 @@ function characterClick(event, link, node) {
 
       let d = d3.select(".node-" + char.replace(/ /g, "")).data()[0];
 
-      link.data().forEach((item) => {
-        if (item.source.index === d.index || item.target.index === d.index) {
-          link
-            .filter((l) => l.index == item.index)
-            .transition()
-            .attr("opacity", 1)
-            .attr("stroke-width", 2);
-        }
-      });
+      // If character exists in graph
+      if (d) {
+        let nodeName = d.name.replace(/ /g, "");
+
+        links.data().forEach((item) => {
+          if (
+            item.source.name.replace(/ /g, "") === d.name ||
+            item.target.name.replace(/ /g, "") === d.name
+          ) {
+            links
+              .filter((l) => l.index == item.index)
+              .transition()
+              .attr("opacity", 1)
+              .attr("stroke-width", 2);
+          }
+        });
+      }
     });
   } else {
     // No names selected
-    node.transition().attr("opacity", 1);
-    link.transition().attr("opacity", 1).attr("stroke-width", 2);
+    nodes.transition().attr("opacity", 1);
+    links.transition().attr("opacity", 1).attr("stroke-width", 2);
   }
 }
 /**
@@ -84,40 +92,32 @@ function filterEpisodeData(originData) {
 
         // Increase value of existing node
         uniqueNodes[uniqueNodesIndex].value += currNode.value;
-
-        // Update source and target on all connected links to current node
-        episodeLinks.map((link) => {
-          if (link.target === i) {
-            return { ...link, target: uniqueNodesIndex };
-          } else if (link.source === i) {
-            return { ...link, source: uniqueNodesIndex };
-          }
-          return link;
-        });
       } else {
         uniqueNodes.push(currNode);
       }
     });
 
-    episodeLinks.forEach((link) => {
-      const containsLink = uniqueLinks.some(
-        (obj) => obj.target === link.target && obj.source === link.source
-      );
-      if (containsLink) {
-        // Add values on same links
-        let index = uniqueLinks.findIndex(
-          (obj) => obj.target === link.target && obj.source === link.source
+    // REMOVE DUPLICATES
+    episodeLinks.forEach((currLink) => {
+      if (
+        uniqueLinks.some(
+          (obj) =>
+            obj.target === currLink.target && obj.source === currLink.source
+        )
+      ) {
+        let uniqueLinksIndex = uniqueLinks.findIndex(
+          (obj) =>
+            obj.target === currLink.target && obj.source === currLink.source
         );
-        uniqueLinks[index].value += link.value;
+        uniqueLinks[uniqueLinksIndex].value += currLink.value;
       } else {
-        // Link does not exists
-        uniqueLinks.push(link);
+        uniqueLinks.push(currLink);
       }
     });
   }
 
   let combinedData = { nodes: uniqueNodes, links: uniqueLinks };
-  console.log(combinedData);
+
   return combinedData;
 }
 
@@ -175,7 +175,7 @@ function drawGraph(data, type, graphIndex) {
     .style("visibility", "hidden");
 
   let node = svg
-    .attr("class", "nodes")
+    // .attr("class", "nodes")
     .selectAll("circle")
     .data(data.nodes)
     .enter()
@@ -185,7 +185,7 @@ function drawGraph(data, type, graphIndex) {
     .attr("fill", (d) => d.colour)
     .attr("class", (d) => "node-" + d.name.replace(/ /g, ""))
     .classed("fixed", (d) => d.fx !== undefined)
-    .classed("nodes", true)
+    .classed("node", true)
     .call(
       d3.drag().on("start", dragStarted).on("drag", dragged)
       // .on("end", dragEnded)
@@ -206,8 +206,6 @@ function drawGraph(data, type, graphIndex) {
   });
 
   link.on("mousemove", function (d) {
-    var mousePos = d3.mouse(svg.node());
-    // linkLabel.attr("x", mousePos[0] + 10).attr("y", mousePos[1] + 10);
     linkLabel
       .style("top", d3.event.pageY - 10 + "px")
       .style("left", d3.event.pageX - 10 + "px");
@@ -242,7 +240,7 @@ function drawGraph(data, type, graphIndex) {
     .forceSimulation()
     .force(
       "link",
-      d3.forceLink().id((d) => d.index)
+      d3.forceLink().id((d) => d.name)
     )
     .force("center", d3.forceCenter(width / 2, height / 3))
     .force("collission", d3.forceCollide().radius(35))
